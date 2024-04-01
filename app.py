@@ -28,7 +28,6 @@ if not pd.api.types.is_datetime64_any_dtype(df['date']):
 # Asegurarse de que los códigos de las estaciones estén en el formato correcto
 df['est'] = df['est'].astype(str)
 df_est['CODIGO'] = df_est['CODIGO'].astype(str)
-df_alerta=evaluar_alertas(df)
 
 st.write("# SEREMI RM - Analisis exploratorio de datos - Temperaturas extremas")
 
@@ -41,7 +40,7 @@ codigo_estacion_seleccionada = df_est[df_est['NOMBRE'] == nombre_estacion_selecc
 
 
 # Filtrar los datos para la estación seleccionada
-df_seleccionado = df_alerta[df_alerta.est == codigo_estacion_seleccionada]
+df_seleccionado = df[df.est == codigo_estacion_seleccionada]
 # Figura 1
 st.write(f"## Temperaturas máximas para la estación {nombre_estacion_seleccionada} desde el año 2013")
 fig = px.line(df_seleccionado, x='date', y='t_max', title=f'Temperaturas Máximas para {nombre_estacion_seleccionada}')
@@ -61,6 +60,7 @@ st.plotly_chart(fig2, use_container_width=True)
 #%%
 st.write(f"## Tipos de alerta para la estación {nombre_estacion_seleccionada} desde el año 2023")
 def visualizar_alertas_con_marcadores(df):
+    df=evaluar_alertas(df)
     # Mapeo de colores para cada tipo de alerta
     color_map = {
         'Sin Alerta': 'blue',  # Azul para días sin alerta
@@ -84,3 +84,28 @@ fig_con_alertas_con_marcadores = visualizar_alertas_con_marcadores(df_selecciona
 st.plotly_chart(fig_con_alertas_con_marcadores, use_container_width=True)
 
 # %%
+def resumen_alertas(df):
+    # Filtrar solo Alertas Amarillas y Rojas
+    df_alertas = df[df['alerta'].isin(['Alerta Amarilla', 'Alerta Roja'])]
+    
+    # Contar la cantidad de alertas por tipo
+    conteo_alertas = df_alertas['alerta'].value_counts().reset_index()
+    conteo_alertas.columns = ['Tipo de Alerta', 'Cantidad']
+    
+    # Encontrar las fechas de inicio y fin para cada tipo de alerta
+    df_alertas = df_alertas.sort_values(by='date')
+    fechas_alertas = df_alertas.groupby('alerta')['date'].agg(['min', 'max']).reset_index()
+    fechas_alertas.columns = ['Tipo de Alerta', 'Fecha Inicio', 'Fecha Fin']
+    
+    # Unir los conteos con las fechas de inicio y fin
+    resumen = pd.merge(conteo_alertas, fechas_alertas, on='Tipo de Alerta', how='left')
+    
+    return resumen
+
+# %%
+# Aplicar la función de resumen de alertas
+resumen_alertas_df = resumen_alertas(df_seleccionado_2023)
+
+# Mostrar el resumen de alertas en el dashboard
+st.write("## Resumen de Alertas Amarillas y Rojas")
+st.table(resumen_alertas_df)
