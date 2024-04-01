@@ -84,28 +84,23 @@ fig_con_alertas_con_marcadores = visualizar_alertas_con_marcadores(df_selecciona
 st.plotly_chart(fig_con_alertas_con_marcadores, use_container_width=True)
 
 # %%
-def resumen_alertas(df):
+def listar_eventos_alerta_con_temp(df):
     # Filtrar solo Alertas Amarillas y Rojas
     df_alertas = df[df['alerta'].isin(['Alerta Amarilla', 'Alerta Roja'])]
-    
-    # Contar la cantidad de alertas por tipo
-    conteo_alertas = df_alertas['alerta'].value_counts().reset_index()
-    conteo_alertas.columns = ['Tipo de Alerta', 'Cantidad']
-    
-    # Encontrar las fechas de inicio y fin para cada tipo de alerta
+
+    # Ordenar por fecha
     df_alertas = df_alertas.sort_values(by='date')
-    fechas_alertas = df_alertas.groupby('alerta')['date'].agg(['min', 'max']).reset_index()
-    fechas_alertas.columns = ['Tipo de Alerta', 'Fecha Inicio', 'Fecha Fin']
-    
-    # Unir los conteos con las fechas de inicio y fin
-    resumen = pd.merge(conteo_alertas, fechas_alertas, on='Tipo de Alerta', how='left')
-    
-    return resumen
 
-# %%
-# Aplicar la función de resumen de alertas
-resumen_alertas_df = resumen_alertas(df_seleccionado_2023)
+    # Seleccionar las columnas relevantes, incluyendo la temperatura máxima
+    eventos_alerta = df_alertas[['date', 'alerta', 't_max']].reset_index(drop=True)
+    eventos_alerta.columns = ['Fecha', 'Tipo de Alerta', 'Temperatura Máxima']
 
-# Mostrar el resumen de alertas en el dashboard
-st.write("## Resumen de Alertas Amarillas y Rojas")
-st.table(resumen_alertas_df)
+    return eventos_alerta
+
+# Aplicar la función y obtener la lista de eventos de alerta con temperatura
+eventos_alerta_df_con_temp = listar_eventos_alerta_con_temp(df_seleccionado_2023)
+
+# Mostrar los eventos de alerta con temperatura en el dashboard
+st.write("## Eventos de Alertas Amarillas y Rojas con Temperatura Máxima")
+st.table(eventos_alerta_df_con_temp)
+
