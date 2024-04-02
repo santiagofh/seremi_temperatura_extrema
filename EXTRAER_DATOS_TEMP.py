@@ -200,3 +200,4 @@ fig_bar_estación = px.bar(extremas_por_estación, x='est', y='días_extremos',
 # Displaying the first plot as an example due to execution environment constraints
 fig_scatter.show()
 # %%
+'hola'

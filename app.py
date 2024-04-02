@@ -3,11 +3,11 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import pydeck as pdk
-
+#%%
 # Cargar los datos (Asumiendo que ya has cargado y preparado 'df' y 'df_est' como antes)
 df = pd.read_csv("data/tmm_historico_2013_2024.csv")
 df_est = pd.read_excel("data/est_meteo.xlsx")
-
+#%%
 # Funciones
 def evaluar_alertas(df):
     df['alerta'] = 'Sin Alerta' 
@@ -20,7 +20,11 @@ def evaluar_alertas(df):
     df['alerta_consecutiva_3'] = df['alerta_temporal'].rolling(window=3).sum()
     df.loc[df['alerta_consecutiva_3'] >= 3, 'alerta'] = 'Alerta Roja'
     return df
-
+def evaluar_sobre35(df):
+    df['sobre_35'] = 'Bajo 35' 
+    df.loc[df['t_max'] >= 35, 'sobre_35'] = 'Sobre 35'
+    return df
+#%%
 # Preparar los datos de fecha y códigos de estaciones, si aún no se ha hecho
 if not pd.api.types.is_datetime64_any_dtype(df['date']):
     df['date'] = pd.to_datetime(df['date'])
@@ -29,7 +33,14 @@ if not pd.api.types.is_datetime64_any_dtype(df['date']):
 df['est'] = df['est'].astype(str)
 df_est['CODIGO'] = df_est['CODIGO'].astype(str)
 
+#%%
+
+# TITULO
 st.write("# SEREMI RM - Analisis exploratorio de datos - Temperaturas extremas")
+
+## Mapa
+
+## Selección de 
 
 # Encontrar el código de la estación basado en el nombre seleccionado
 # Crear un selectbox para seleccionar la estación
@@ -41,6 +52,10 @@ codigo_estacion_seleccionada = df_est[df_est['NOMBRE'] == nombre_estacion_selecc
 
 # Filtrar los datos para la estación seleccionada
 df_seleccionado = df[df.est == codigo_estacion_seleccionada]
+df_est = df_est[df_est.CODIGO==codigo_estacion_seleccionada]
+st.title("Mapa de Estaciones")
+st.map(df_est, latitude="lat", longitude="long", color="#0000ff", size=100 ,zoom=10)
+
 # Figura 1
 st.write(f"## Temperaturas máximas para la estación {nombre_estacion_seleccionada} desde el año 2013")
 fig = px.line(df_seleccionado, x='date', y='t_max', title=f'Temperaturas Máximas para {nombre_estacion_seleccionada}')
@@ -103,4 +118,24 @@ eventos_alerta_df_con_temp = listar_eventos_alerta_con_temp(df_seleccionado_2023
 # Mostrar los eventos de alerta con temperatura en el dashboard
 st.write("## Eventos de Alertas Amarillas y Rojas con Temperatura Máxima")
 st.table(eventos_alerta_df_con_temp)
+def visualizar_sobre35_con_marcadores(df):
+    df=evaluar_sobre35(df)
+    # Mapeo de colores para cada tipo de alerta
+    color_map = {
+        'Sobre 35': 'red',  # Azul para días sin alerta
+        'Bajo 35': 'blue',  # Azul para días sin alerta
+    }
+    
+    # Crear la figura
+    fig = px.line(df, x='date', y='t_max', title=f'Temperaturas Máximas y Alertas para {nombre_estacion_seleccionada}', color_discrete_sequence=['grey'])
 
+    # Agregar marcadores de colores
+    for alerta, color in color_map.items():
+        df_alerta = df[df['sobre_35'] == alerta]
+        fig.add_scatter(x=df_alerta['date'], y=df_alerta['t_max'], mode='markers', name=alerta, marker=dict(color=color),)
+
+    return fig
+fig_con_alertas35_con_marcadores = visualizar_sobre35_con_marcadores(df_seleccionado_2023)
+st.plotly_chart(fig_con_alertas35_con_marcadores, use_container_width=True)
+# %%
+st.write("## Sobre 35 grados")
