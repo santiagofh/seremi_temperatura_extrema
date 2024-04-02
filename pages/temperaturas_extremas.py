@@ -4,6 +4,11 @@ import pandas as pd
 import plotly.express as px
 import pydeck as pdk
 #%%
+st.set_page_config(
+    page_title="Temperatura Extrema",
+    page_icon="🌡",
+)
+
 # Cargar los datos (Asumiendo que ya has cargado y preparado 'df' y 'df_est' como antes)
 df = pd.read_csv("data/tmm_historico_2013_2024.csv")
 df_est = pd.read_excel("data/est_meteo.xlsx")
