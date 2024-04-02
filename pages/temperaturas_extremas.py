@@ -20,7 +20,10 @@ def evaluar_alertas(df):
     df['alerta_consecutiva_3'] = df['alerta_temporal'].rolling(window=3).sum()
     df.loc[df['alerta_consecutiva_3'] >= 3, 'alerta'] = 'Alerta Roja'
     return df
-
+def evaluar_sobre35(df):
+    df['sobre_35'] = 'Bajo 35' 
+    df.loc[df['t_max'] >= 35, 'sobre_35'] = 'Sobre 35'
+    return df
 #%%
 # Preparar los datos de fecha y códigos de estaciones, si aún no se ha hecho
 if not pd.api.types.is_datetime64_any_dtype(df['date']):
@@ -113,8 +116,42 @@ def listar_eventos_alerta_con_temp(df):
 eventos_alerta_df_con_temp = listar_eventos_alerta_con_temp(df_seleccionado_2023)
 
 # Mostrar los eventos de alerta con temperatura en el dashboard
+
 st.write("## Eventos de Alertas Amarillas y Rojas con Temperatura Máxima")
 st.table(eventos_alerta_df_con_temp)
+def visualizar_sobre35_con_marcadores(df):
+    df=evaluar_sobre35(df)
+    # Mapeo de colores para cada tipo de alerta
+    color_map = {
+        'Sobre 35': 'red',  # Azul para días sin alerta
+        'Bajo 35': 'blue',  # Azul para días sin alerta
+    }
+    
+    # Crear la figura
+    fig = px.line(df, x='date', y='t_max', title=f'Temperaturas Máximas y Alertas para {nombre_estacion_seleccionada}', color_discrete_sequence=['grey'])
 
+    # Agregar marcadores de colores
+    for alerta, color in color_map.items():
+        df_alerta = df[df['sobre_35'] == alerta]
+        fig.add_scatter(x=df_alerta['date'], y=df_alerta['t_max'], mode='markers', name=alerta, marker=dict(color=color),)
 
+    return fig
+def listar_eventos_alerta35_con_temp(df):
+    # Filtrar solo Alertas Amarillas y Rojas
+    df_alertas = df[df['sobre_35'].isin(['Sobre 35'])]
+
+    # Ordenar por fecha
+    df_alertas = df_alertas.sort_values(by='date')
+
+    # Seleccionar las columnas relevantes, incluyendo la temperatura máxima
+    eventos_alerta = df_alertas[['date', 'sobre_35', 't_max']].reset_index(drop=True)
+    eventos_alerta.columns = ['Fecha', 'Alerta', 'Temperatura Máxima']
+
+    return eventos_alerta
+fig_con_alertas35_con_marcadores = visualizar_sobre35_con_marcadores(df_seleccionado_2023)
+eventos_alerta_df_con_temp35 = listar_eventos_alerta35_con_temp(df_seleccionado_2023)
+
+st.write(f"## Eventos sobre 35 grados en la estación {nombre_estacion_seleccionada}")
+st.plotly_chart(fig_con_alertas35_con_marcadores, use_container_width=True)
+st.table(eventos_alerta_df_con_temp35)
 # %%
