@@ -116,6 +116,7 @@ def listar_eventos_alerta_con_temp(df):
 eventos_alerta_df_con_temp = listar_eventos_alerta_con_temp(df_seleccionado_2023)
 
 # Mostrar los eventos de alerta con temperatura en el dashboard
+
 st.write("## Eventos de Alertas Amarillas y Rojas con Temperatura Máxima")
 st.table(eventos_alerta_df_con_temp)
 def visualizar_sobre35_con_marcadores(df):
@@ -135,7 +136,22 @@ def visualizar_sobre35_con_marcadores(df):
         fig.add_scatter(x=df_alerta['date'], y=df_alerta['t_max'], mode='markers', name=alerta, marker=dict(color=color),)
 
     return fig
+def listar_eventos_alerta35_con_temp(df):
+    # Filtrar solo Alertas Amarillas y Rojas
+    df_alertas = df[df['sobre_35'].isin(['Sobre 35'])]
+
+    # Ordenar por fecha
+    df_alertas = df_alertas.sort_values(by='date')
+
+    # Seleccionar las columnas relevantes, incluyendo la temperatura máxima
+    eventos_alerta = df_alertas[['date', 'sobre_35', 't_max']].reset_index(drop=True)
+    eventos_alerta.columns = ['Fecha', 'Alerta', 'Temperatura Máxima']
+
+    return eventos_alerta
 fig_con_alertas35_con_marcadores = visualizar_sobre35_con_marcadores(df_seleccionado_2023)
+eventos_alerta_df_con_temp35 = listar_eventos_alerta35_con_temp(df_seleccionado_2023)
+
+st.write(f"## Eventos sobre 35 grados en la estación {nombre_estacion_seleccionada}")
 st.plotly_chart(fig_con_alertas35_con_marcadores, use_container_width=True)
+st.table(eventos_alerta_df_con_temp35)
 # %%
-st.write("## Sobre 35 grados")
