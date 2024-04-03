@@ -1,3 +1,4 @@
+#%%
 import streamlit as st
 st.set_page_config(
     page_title="Hello",
@@ -17,3 +18,4 @@ st.markdown(
 )
 st.page_link("Hello.py", label="Home", icon="🏠")
 st.page_link("pages/🌡_Temperaturas_Extremas.py", label="Temperaturas Extremas",  icon="🌡")
+# %%
