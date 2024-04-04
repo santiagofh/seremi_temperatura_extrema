@@ -7,6 +7,10 @@ from datetime import datetime
 from io import StringIO
 import plotly.express as px
 from io import BytesIO
+import certifi
+import warnings
+warnings.filterwarnings('ignore', message='Unverified HTTPS request is being made')
+
 #%%
 ## Temperatura Media Mensual
 url_tmm = 'https://climatologia.meteochile.gob.cl/application/mensual/temperaturaMediaMensual'
@@ -35,8 +39,7 @@ est=[
 #%%
 ## Funciones
 def extraeTable(url):
-    response = requests.get(url)
-    response = requests.get(url, timeout=360)
+    response = requests.get(url, timeout=360, verify=False)
     if response.status_code == 200:
         soup = BeautifulSoup(response.content, 'html.parser')
         table = soup.find('table')
@@ -79,6 +82,7 @@ for i in est:
     for j in fechas:
         ls_est_fecha.append(i+j)
 print(ls_est_fecha)
+
 #%%
 import time
 ls_tmm = []
@@ -139,65 +143,3 @@ tmm_faltantes = pd.DataFrame(no_ls_tmm, columns=['url_faltantes'])
 # %%
 tmm_reduced_date.to_csv("data/tmm_historico_2013_2024.csv")
 tmm_faltantes.to_csv("data/tmm_faltantes.csv") 
-# %%
-
-import plotly.express as px
-
-# Asegurándonos de que tmm_reduced_date tiene una columna 'fecha_formateada' correctamente formateada.
-if 'fecha_formateada' not in tmm_reduced_date.columns:
-    tmm_reduced_date['fecha_formateada'] = tmm_reduced_date['date'].dt.strftime('%d-%m-%Y')
-
-# Crear el gráfico con Plotly Express
-fig = px.scatter(tmm_reduced_date, x='date', y='t_max', title='Temperaturas Máximas por Día',
-                 labels={'date': 'Fecha', 't_max': 'Temperatura Máxima (°C)'},
-                 hover_data=['fecha_formateada', 'est', 't_max'])
-
-# Añadir línea horizontal en 35 grados
-fig.add_hline(y=35, line_dash="dash", line_color="red", annotation_text="35 °C", annotation_position="bottom right")
-
-# Mostrar el gráfico
-fig.show()
-
-# Contar cuántos valores están sobre la línea de 35 grados
-valores_sobre_35 = tmm_reduced_date[tmm_reduced_date['t_max'] > 35].shape[0]
-valores_sobre_35
-
-# Contar cuántos valores están sobre la línea de 35 grados
-valores_sobre_35 = tmm_reduced_date[tmm_reduced_date['t_max'] > 35].shape[0]
-valores_sobre_35
-
-# %%
-tmm_reduced_date.loc[tmm_reduced_date['t_max'] > 35]
-# %%
-estaciones_por_año = tmm_reduced_date[tmm_reduced_date['t_max'] > 35].groupby('date')['est'].nunique().reset_index()
-fig = px.bar(estaciones_por_año, x='year', y='est', title='Cantidad de Estaciones que Superaron los 35°C por Año',
-             labels={'est': 'Cantidad de Estaciones', 'year': 'Año'})
-fig.show()
-# %%
-
-# 1. Histograma de las temperaturas máximas
-fig_hist = px.histogram(tmm_reduced_date, x='t_max', nbins=50, title='Distribución de Temperaturas Máximas',
-                        labels={'t_max': 'Temperatura Máxima (°C)'})
-
-# 2. Temperaturas Máximas a lo Largo del Tiempo
-fig_scatter = px.scatter(tmm_reduced_date, x='date', y='t_max',
-                         title='Temperaturas Máximas a lo Largo del Tiempo',
-                         color='t_max', color_continuous_scale=px.colors.sequential.Inferno,
-                         labels={'date': 'Fecha', 't_max': 'Temperatura Máxima (°C)'})
-
-# 3. Cantidad de Días con Temperaturas Extremas por Año
-extremas_por_año = tmm_reduced_date[tmm_reduced_date['t_max'] > 35].groupby('year').size().reset_index(name='días_extremos')
-fig_bar_año = px.bar(extremas_por_año, x='year', y='días_extremos',
-                     title='Cantidad de Días con Temperaturas Extremas (>35°C) por Año',
-                     labels={'días_extremos': 'Días Extremos', 'year': 'Año'})
-
-# 4. Temperaturas Máximas por Estación
-extremas_por_estación = tmm_reduced_date[tmm_reduced_date['t_max'] > 35].groupby('est').size().reset_index(name='días_extremos')
-fig_bar_estación = px.bar(extremas_por_estación, x='est', y='días_extremos',
-                          title='Cantidad de Días con Temperaturas Extremas (>35°C) por Estación',
-                          labels={'días_extremos': 'Días Extremos', 'est': 'Estación'})
-
-# Displaying the first plot as an example due to execution environment constraints
-fig_scatter.show()
-# %%
-'hola'

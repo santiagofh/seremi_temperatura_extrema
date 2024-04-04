@@ -13,12 +13,37 @@ st.set_page_config(
 # Cargar los datos (Asumiendo que ya has cargado y preparado 'df' y 'df_est' como antes)
 df = pd.read_csv("data/tmm_historico_2013_2024.csv")
 df_est = pd.read_excel("data/est_meteo.xlsx")
-df_def = pd.read_excel("data/Defunciones 2023 y 2024.xlsx")
+df_def_17 = pd.read_excel("data/Defunciones totales 2017 a 2024.xlsx", sheet_name="2017", skiprows=3, usecols="B:I")
+df_def_18 = pd.read_excel("data/Defunciones totales 2017 a 2024.xlsx", sheet_name="2018", skiprows=3, usecols="B:I")
+df_def_19 = pd.read_excel("data/Defunciones totales 2017 a 2024.xlsx", sheet_name="2019", skiprows=3, usecols="B:I")
+df_def_20 = pd.read_excel("data/Defunciones totales 2017 a 2024.xlsx", sheet_name="2020", skiprows=3, usecols="B:I")
+df_def_21 = pd.read_excel("data/Defunciones totales 2017 a 2024.xlsx", sheet_name="2021", skiprows=3, usecols="B:I")
+df_def_22 = pd.read_excel("data/Defunciones totales 2017 a 2024.xlsx", sheet_name="2022", skiprows=3, usecols="B:I")
+df_def_23 = pd.read_excel("data/Defunciones totales 2017 a 2024.xlsx", sheet_name="2023-2024", skiprows=3, usecols="B:I")
+#%%
+# Lista de DataFrames
+ls_df_def = [
+    df_def_17,
+    df_def_18,
+    df_def_19,
+    df_def_20,
+    df_def_21,
+    df_def_22,
+    df_def_23.rename(columns={'Unnamed: 1': 'FECHADEF'})  # Asumiendo que solo el último necesita renombrar esta columna
+]
 
-# Convertir las fechas y sumar las defunciones para cada fecha
-df_def['fecha'] = pd.to_datetime(df_def['fecha'], format='%d/%m/%Y')
+# Concatenar todos los DataFrames en uno
+df_def = pd.concat(ls_df_def)
+
+# Renombrar columna de fecha para uniformidad
+df_def.rename(columns={'FECHADEF': 'fecha'}, inplace=True)
+
+# Convertir la columna 'fecha' a datetime
+df_def = df_def.dropna()
+df_def['fecha'] = pd.to_datetime(df_def['fecha'])
+
+# Calcular el total de defunciones para cada fecha
 df_def['total_defunciones'] = df_def.iloc[:, 1:].sum(axis=1)
-
 #%%
 # Funciones
 def evaluar_alertas(df):
