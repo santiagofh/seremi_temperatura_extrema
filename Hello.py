@@ -18,4 +18,5 @@ st.markdown(
 )
 st.page_link("Hello.py", label="Home", icon="🏠")
 st.page_link("pages/🌡_Temperaturas_Extremas.py", label="Temperaturas Extremas",  icon="🌡")
+st.page_link("pages/🌡_Temperaturas_Extremas_y_defunciones.py", label="Temperaturas Extremas",  icon="🌡")
 # %%
