@@ -5,6 +5,8 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from datetime import datetime
+
 #%%
 # Carga de datos
 df = pd.read_csv("data/datos_meteo.csv")
@@ -226,3 +228,49 @@ fig.update_yaxes(title_text="Temperatura Máxima (°C)", row=1, col=1)
 fig.update_xaxes(title_text="Mes", row=1, col=2)
 fig.update_yaxes(title_text="Total de Defunciones", row=1, col=2)
 st.plotly_chart(fig)
+#%%
+# %%
+st.write('## Gráfico de boxplots de temperaturas máximas y total de defunciones por mes específico a lo largo de los años')
+
+# Asegúrate de que 'date' es una columna de tipo datetime
+df_selec_est_def['date'] = pd.to_datetime(df_selec_est_def['date'])
+
+# Extrae el nombre del mes y el año de la columna 'date'
+df_selec_est_def['mes'] = df_selec_est_def['date'].dt.strftime('%B')
+df_selec_est_def['year'] = df_selec_est_def['date'].dt.year
+
+# Crea una lista de los nombres de los meses disponibles en los datos
+meses_disponibles = df_selec_est_def['mes'].unique().tolist()
+meses_disponibles.sort(key=lambda date: datetime.strptime(date, "%B"))
+
+# Permite al usuario seleccionar un mes por nombre
+mes_selec = st.selectbox('Selecciona un mes:', meses_disponibles)
+
+# Filtra el dataframe para el mes seleccionado
+df_filter_mes = df_selec_est_def[df_selec_est_def['mes'] == mes_selec]
+
+# Crea boxplots para el mes seleccionado a lo largo de los años
+fig = make_subplots(rows=1, cols=2, subplot_titles=('Temperaturas Máximas', 'Total de Defunciones'))
+
+# Boxplot de temperaturas máximas por año para el mes seleccionado
+fig.add_trace(
+    go.Box(x=df_filter_mes['year'], y=df_filter_mes['t_max'], name='Temperaturas Máximas'),
+    row=1, col=1
+)
+
+# Boxplot de total de defunciones por año para el mes seleccionado
+fig.add_trace(
+    go.Box(x=df_filter_mes['year'], y=df_filter_mes['total_defunciones'], name='Total de Defunciones', marker=dict(color='red')),
+    row=1, col=2
+)
+
+# Actualiza el layout de la figura para incluir los nombres del mes y año en los títulos de los ejes
+fig.update_layout(height=600, width=800, title_text=f"Boxplots de Temperaturas Máximas y Total de Defunciones por {mes_selec}")
+fig.update_xaxes(title_text="Año", row=1, col=1)
+fig.update_yaxes(title_text="Temperatura Máxima (°C)", row=1, col=1)
+fig.update_xaxes(title_text="Año", row=1, col=2)
+fig.update_yaxes(title_text="Total de Defunciones", row=1, col=2)
+
+# Muestra el gráfico
+st.plotly_chart(fig)
+# %%

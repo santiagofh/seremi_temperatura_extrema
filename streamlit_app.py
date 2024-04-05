@@ -65,7 +65,13 @@ st.markdown("""
                 - Temperaturas máximas diarias de 40ºC o más, por un dia o más. 
                 - Temepraturas máximas diarias sde 34ºC o más, por al menos 3 dias.
             ### Datos de defunciones
-                         
+            Los registros de defunciones se obtuvieron del DEIS, con el fin de correlacionar con los datos meteorológicos.
+            ### Visualizacion de datos:
+
+            - Preparación de Datos para Análisis: Se filtran los datos para considerar solo aquellos que pertenecen a la estación seleccionada y al rango de años de interés, determinado por el usuario.
+            - Se generan gráficos de series de tiempo para visualizar la relación entre las temperaturas máximas y las defunciones totales, con la capacidad de distinguir días con temperaturas sobre y bajo 35°C.
+            - Se implementan gráficos que marcan los días con diferentes tipos de alertas meteorológicas, como Alerta Temprana Preventiva, Alerta Amarilla, y Alerta Roja, basándose en criterios preestablecidos.
+            - Se crean boxplots para analizar la distribución mensual de las temperaturas máximas y las defunciones en un año específico, permitiendo observar tendencias y anomalías.            
 """)
 st.markdown(
     """
