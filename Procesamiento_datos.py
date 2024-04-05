@@ -1,12 +1,8 @@
 #%%
-import streamlit as st
 import pandas as pd
 import plotly.express as px
 import pydeck as pdk
 import plotly.graph_objs as go
-
-# Configuración inicial de la página de Streamlit
-st.set_page_config(page_title="Temperatura Extrema 2", page_icon="🌡")
 
 #%%
 import streamlit as st
