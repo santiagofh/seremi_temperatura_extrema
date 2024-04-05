@@ -36,9 +36,24 @@ st.markdown("""
             **Análisis de Datos y Evaluación de Alertas**: 
             - Se definen funciones para evaluar y clasificar días según criterios específicos de temperatura, como la asignación de alertas (sin alerta, alerta temprana preventiva, alerta amarilla, alerta roja) basadas en la temperatura máxima y la temporalidad.
             - Se calcula si las temperaturas superan los 35°C, marcando esos días específicamente para una revisión más detallada o acciones preventivas.
-
+            ** Evaluacion de alerta ORD 4877 (2023-12-01)
+            - https://previsionsocial.gob.cl/wp-content/uploads/2023/12/ORD-4877-01-12-2023.pdf
+            - Siguiendo la ORD 4877 emitida el 1 de diciembre de 2023, se establecen los siguientes criterios para la activación de alertas:
+                - Alerta Temprana Preventiva (ATP): 
+                        -   Se declara al momento de la activación del Anexo por Amenaza Calor Extremo.
+                        -   Vigente durante todo el periodo de acrivacion desde el mes de noviembre al mes de marzo de cada año, para todo el territorio nacional.
+                - Alerta Amarilla (AA):
+                    - Pronóstico meteorológico de la Dirección Meteorológica de Chile (DMC) con temperaturas máximas diarias de 34°C o más por al menos 2 días.
+                - Alerta Roja (AR):
+                    - Pronóstico meteorológico de la DMC con temperaturas máximas diarias de 40°C o más por un día o más.
+                    - Pronóstico meteorológico de la DMC con temperaturas máximas diarias de 34°C o más por al menos 3 días.
+            ** Evaluacion de alerta temperaturas sobre 35º**
             
-                    
+            ** Protocolo de Activación Institucional por Calor Extremo SEREMI Salud RM  Versión 01 (16-01-2024)**
+            - Se establecen los siguientes criterios para la activación de alertas:
+            - Verde Temprana Preventiva: Temperatura de 30ºC o más
+            - Alerta Amarilla:
+
                         
 """)
 st.markdown(
