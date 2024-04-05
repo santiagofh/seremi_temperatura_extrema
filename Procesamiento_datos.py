@@ -15,11 +15,6 @@ import plotly.express as px
 import pydeck as pdk
 import plotly.graph_objs as go
 #%%
-st.set_page_config(
-    page_title="Temperatura Extrema",
-    page_icon="🌡",
-)
-
 # Cargar los datos (Asumiendo que ya has cargado y preparado 'df' y 'df_est' como antes)
 df = pd.read_csv("data/tmm_historico_2013_2024.csv")
 df_est = pd.read_excel("data/est_meteo.xlsx")
@@ -42,13 +37,13 @@ ls_df_def = [
 ]
 df_def = pd.concat(ls_df_def)
 df_def.rename(columns={'FECHADEF': 'fecha'}, inplace=True)
-df_def = df_def.dropna()
 df_def['total_defunciones'] = df_def.iloc[:, 1:].sum(axis=1)
+df_def.dropna(subset=['fecha'])
+df_def.to_excel("df_def['total_defunciones'].xlsx")
+df_def = df_def.reset_index(drop=True)
 #%%
 df['date'] = pd.to_datetime(df['date'])
-df_def['fecha'] = pd.to_datetime(df_def['fecha'])
-df_merge = pd.merge(df, df_def, left_on='date', right_on='fecha', how='left')
-df_merge = pd.merge(df, df_def, left_on='date', right_on='fecha', how='left')
+df_def['fecha'] = pd.to_datetime(df_def['fecha'], errors='coerce')
 # %%
 ## FUNCIONES DE EVALUACION DE ALERTAS 
 def evaluar_alertas(df):
@@ -67,10 +62,11 @@ def evaluar_sobre35(df):
     df.loc[df['t_max'] >= 35, 'sobre_35'] = 'Sobre 35'
     return df
 #%%
-df_merge = evaluar_alertas(df_merge)
-df_merge = evaluar_sobre35(df_merge)
+df = evaluar_alertas(df)
+df = evaluar_sobre35(df)
 
 # %%
-df_merge.to_csv("data/datos_meteo_def.csv")
+df.to_csv("data/datos_meteo.csv")
 df_est.to_csv("data/datos_est.csv")
+df_def.to_csv("data/datos_def.csv")
 # %%
