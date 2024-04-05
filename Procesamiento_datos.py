@@ -1,15 +1,5 @@
 #%%
 import pandas as pd
-import plotly.express as px
-import pydeck as pdk
-import plotly.graph_objs as go
-
-#%%
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import pydeck as pdk
-import plotly.graph_objs as go
 #%%
 # Cargar los datos (Asumiendo que ya has cargado y preparado 'df' y 'df_est' como antes)
 df = pd.read_csv("data/tmm_historico_2013_2024.csv")
@@ -33,33 +23,68 @@ ls_df_def = [
 ]
 df_def = pd.concat(ls_df_def)
 df_def.rename(columns={'FECHADEF': 'fecha'}, inplace=True)
+df_def['fecha'] = pd.to_datetime(df_def['fecha'], errors='coerce')
 df_def['total_defunciones'] = df_def.iloc[:, 1:].sum(axis=1)
 df_def.dropna(subset=['fecha'])
-df_def.to_excel("df_def['total_defunciones'].xlsx")
 df_def = df_def.reset_index(drop=True)
 #%%
 df['date'] = pd.to_datetime(df['date'])
-df_def['fecha'] = pd.to_datetime(df_def['fecha'], errors='coerce')
+
 # %%
 ## FUNCIONES DE EVALUACION DE ALERTAS 
-def evaluar_alertas(df):
-    df['alerta'] = 'Sin Alerta' 
+def evaluar_alertas_senapred(df):
+    # Inicializar columnas de alerta y mes
+    df['senapred_alerta'] = 'Sin Alerta'
     df['mes'] = df['date'].dt.month
-    df.loc[df['mes'].isin([11, 12, 1, 2, 3]), 'alerta'] = 'Alerta temprana preventiva'
-    df.loc[df['t_max'] >= 40, 'alerta'] = 'Alerta Roja'
-    df['alerta_temporal'] = df['t_max'] >= 34
-    df['alerta_consecutiva'] = df['alerta_temporal'].rolling(window=2).sum()
-    df.loc[df['alerta_consecutiva'] >= 2, 'alerta'] = 'Alerta Amarilla'
-    df['alerta_consecutiva_3'] = df['alerta_temporal'].rolling(window=3).sum()
-    df.loc[df['alerta_consecutiva_3'] >= 3, 'alerta'] = 'Alerta Roja'
+
+    # Alerta Temprana Preventiva
+    df.loc[df['mes'].isin([11, 12, 1, 2, 3]), 'senapred_alerta'] = 'Alerta Temprana Preventiva'
+
+    # Alerta Roja por temperatura >= 40°C en cualquier día
+    df.loc[df['t_max'] >= 40, 'senapred_alerta'] = 'Alerta Roja'
+
+    # Alerta Amarilla y Roja por temperatura >= 34°C en 2 o 3 días consecutivos
+    df['senapred_alerta_temporal'] = df['t_max'] >= 34
+    df['senapred_alerta_consecutiva'] = df['senapred_alerta_temporal'].rolling(window=2).sum()
+    df.loc[df['senapred_alerta_consecutiva'] >= 2, 'senapred_alerta'] = 'Alerta Amarilla'
+    df['senapred_alerta_consecutiva_3'] = df['senapred_alerta_temporal'].rolling(window=3).sum()
+    df.loc[df['senapred_alerta_consecutiva_3'] >= 3, 'senapred_alerta'] = 'Alerta Roja'
+
     return df
-def evaluar_sobre35(df):
-    df['sobre_35'] = 'Bajo 35' 
-    df.loc[df['t_max'] >= 35, 'sobre_35'] = 'Sobre 35'
+
+def evaluar_alertas_sobre35(df):
+    # Indicador para temperaturas sobre 35°C
+    df['sobre_35_alerta'] = 'Bajo 35'
+    df.loc[df['t_max'] >= 35, 'sobre_35_alerta'] = 'Sobre 35'
     return df
+
+def evaluar_alertas_seremi(df):
+    # Inicializar columna de alerta con valor por defecto
+    df['seremi_alerta'] = 'Sin Alerta'
+
+    # Verde Temprana Preventiva para temperaturas >= 30°C
+    df.loc[df['t_max'] >= 30, 'seremi_alerta'] = 'Verde Temprana Preventiva'
+
+    # Preparar indicadores temporales para Alerta Amarilla y Roja
+    df['seremi_alerta_temporal_34'] = df['t_max'] >= 34
+    df['seremi_alerta_consecutiva_34_2dias'] = df['seremi_alerta_temporal_34'].rolling(window=2).sum()
+    df['seremi_alerta_consecutiva_34_3dias'] = df['seremi_alerta_temporal_34'].rolling(window=3).sum()
+
+    # Alerta Amarilla: Temperaturas >= 34°C por al menos 2 días consecutivos
+    df.loc[df['seremi_alerta_consecutiva_34_2dias'] >= 2, 'seremi_alerta'] = 'Alerta Amarilla'
+
+    # Alerta Roja por temperatura >= 40°C en cualquier día
+    df.loc[df['t_max'] >= 40, 'seremi_alerta'] = 'Alerta Roja'
+
+    # Alerta Roja: Temperaturas >= 34°C por al menos 3 días consecutivos
+    df.loc[df['seremi_alerta_consecutiva_34_3dias'] >= 3, 'seremi_alerta'] = 'Alerta Roja'
+
+    return df
+
 #%%
-df = evaluar_alertas(df)
-df = evaluar_sobre35(df)
+df = evaluar_alertas_seremi(df)
+df = evaluar_alertas_sobre35(df)
+df = evaluar_alertas_senapred(df)
 
 # %%
 df.to_csv("data/datos_meteo.csv")

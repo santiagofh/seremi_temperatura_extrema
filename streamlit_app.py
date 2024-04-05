@@ -32,12 +32,16 @@ st.markdown("""
 
             **Estructuración de Datos**: Se reorganizaron los datos para facilitar su análisis, lo que incluyó renombrar columnas para mejorar la claridad, y extraer información clave como la estación meteorológica, el año, y el mes de cada registro.
 
-            ### Evaluación de alerta
+            ### Evaluaciones de alertas por temperatura de calor extremo
             **Análisis de Datos y Evaluación de Alertas**: 
             - Se definen funciones para evaluar y clasificar días según criterios específicos de temperatura, como la asignación de alertas (sin alerta, alerta temprana preventiva, alerta amarilla, alerta roja) basadas en la temperatura máxima y la temporalidad.
             - Se calcula si las temperaturas superan los 35°C, marcando esos días específicamente para una revisión más detallada o acciones preventivas.
-            ** Evaluacion de alerta ORD 4877 (2023-12-01)
-            - https://previsionsocial.gob.cl/wp-content/uploads/2023/12/ORD-4877-01-12-2023.pdf
+            
+            Las evaluaciones se definen segun los siguentes criterios
+
+            **1 - Evaluacion de alerta SENAPRED, ORD 4877 emitido el dia 01-12-2023**
+
+            - Fuente: https://previsionsocial.gob.cl/wp-content/uploads/2023/12/ORD-4877-01-12-2023.pdf
             - Siguiendo la ORD 4877 emitida el 1 de diciembre de 2023, se establecen los siguientes criterios para la activación de alertas:
                 - Alerta Temprana Preventiva (ATP): 
                         -   Se declara al momento de la activación del Anexo por Amenaza Calor Extremo.
@@ -47,14 +51,21 @@ st.markdown("""
                 - Alerta Roja (AR):
                     - Pronóstico meteorológico de la DMC con temperaturas máximas diarias de 40°C o más por un día o más.
                     - Pronóstico meteorológico de la DMC con temperaturas máximas diarias de 34°C o más por al menos 3 días.
-            ** Evaluacion de alerta temperaturas sobre 35º**
             
-            ** Protocolo de Activación Institucional por Calor Extremo SEREMI Salud RM  Versión 01 (16-01-2024)**
-            - Se establecen los siguientes criterios para la activación de alertas:
-            - Verde Temprana Preventiva: Temperatura de 30ºC o más
-            - Alerta Amarilla:
+            **2 - Evaluacion de alerta temperaturas sobre 35º**
+            - Se establece un indicador si la temperatura supera los 35 grados en un dia especifico
 
-                        
+            **3 - Protocolo de Activación Institucional por Calor Extremo SEREMI Salud RM  Versión 01 (16-01-2024)**
+            - Se establecen los siguientes criterios para la activación de alertas:
+            - Verde Temprana Preventiva: 
+                - Temperatura de 30ºC o más
+            - Alerta Amarilla: 
+                - Temperaturas maximas diarias de 34ºC o más, por al menos 2 días.
+            - Alerta Roja: 
+                - Temperaturas máximas diarias de 40ºC o más, por un dia o más. 
+                - Temepraturas máximas diarias sde 34ºC o más, por al menos 3 dias.
+            ### Datos de defunciones
+                         
 """)
 st.markdown(
     """

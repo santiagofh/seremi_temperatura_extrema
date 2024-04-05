@@ -7,9 +7,11 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 #%%
 # Carga de datos
-df = pd.read_csv("data/datos_meteo_def.csv")
+df = pd.read_csv("data/datos_meteo.csv")
 df_est = pd.read_csv("data/datos_est.csv")
-
+df_def = pd.read_csv("data/datos_def.csv")
+df_def['fecha'] = pd.to_datetime(df_def['fecha'], errors='coerce')
+df['date'] = pd.to_datetime(df['date'], errors='coerce')
 #%%
 # Configuración inicial de Streamlit (título de la aplicación)
 st.write("# SEREMI RM - Análisis exploratorio de datos - Temperaturas extremas")
@@ -20,7 +22,9 @@ estaciones = df_est['NOMBRE'].tolist()
 indice_quinta_normal = estaciones.index('Quinta Normal') if 'Quinta Normal' in estaciones else 0
 nombre_estacion_seleccionada = st.selectbox('Selecciona una estación:', estaciones, index=indice_quinta_normal)
 codigo_estacion_seleccionada = df_est[df_est['NOMBRE'] == nombre_estacion_seleccionada]['CODIGO'].iloc[0]
-df_seleccionado = df[df['est'] == codigo_estacion_seleccionada]
+df_selec = df[df['est'] == codigo_estacion_seleccionada]
+df_selec_est_def=df_selec.merge(df_def, how='left', left_on='date', right_on='fecha')
+
 #%%
 # Mapa de estaciones
 st.title("Mapa de Estaciones")
@@ -30,10 +34,10 @@ df_est_mapa = df_est[df_est['CODIGO'] == codigo_estacion_seleccionada]
 st.map(df_est_mapa)
 #%%
 # Preparación de los datos para análisis
-df_seleccionado['date'] = pd.to_datetime(df_seleccionado['date'])
-df_seleccionado['fecha'] = pd.to_datetime(df_seleccionado['fecha'])
-df_seleccionado.dropna(subset=['date'], inplace=True)
-años_disponibles = df_seleccionado['date'].dt.year.unique()
+df_selec_est_def['date'] = pd.to_datetime(df_selec_est_def['date'])
+df_selec_est_def['fecha'] = pd.to_datetime(df_selec_est_def['fecha'])
+df_selec_est_def.dropna(subset=['date'], inplace=True)
+años_disponibles = df_selec_est_def['date'].dt.year.unique()
 
 # Selección del rango de años para el análisis
 if len(años_disponibles) > 0:
@@ -45,19 +49,23 @@ if len(años_disponibles) > 0:
 else:
     st.error("No hay datos disponibles para mostrar.")
 
-df_seleccionado_periodo = df_seleccionado[df_seleccionado['date'].dt.year.between(año_inicio, año_fin)]
+df_selec_est_def_period = df_selec_est_def[df_selec_est_def['date'].dt.year.between(año_inicio, año_fin)]
 #%%
 # Creación de gráficos con Plotly
 #%%
 # Gráfico de temperaturas máximas y total de defunciones
-st.write("## Gráfico de temperaturas máximas y total de defunciones")
+
+
+
+st.write("## Gráfico de temperaturas máximas y total de defunciones con distintos criterios")
+
 fig = make_subplots(specs=[[{"secondary_y": True}]])
 fig.add_trace(
-    go.Scatter(x=df_seleccionado_periodo['date'], y=df_seleccionado_periodo['t_max'], name='Temperatura Máxima', mode='lines'),
+    go.Scatter(x=df_selec_est_def_period['date'], y=df_selec_est_def_period['t_max'], name='Temperatura Máxima', mode='lines'),
     secondary_y=False,
 )
 fig.add_trace(
-    go.Scatter(x=df_seleccionado_periodo['date'], y=df_seleccionado_periodo['total_defunciones'], name='Total de Defunciones', mode='lines', marker=dict(color='purple')),
+    go.Scatter(x=df_selec_est_def_period['date'], y=df_selec_est_def_period['total_defunciones'], name='Total de Defunciones', mode='lines', marker=dict(color='purple')),
     secondary_y=True,
 )
 fig.update_layout(title_text=f"Temperaturas Máximas y Total de Defunciones para {nombre_estacion_seleccionada} desde {año_inicio} hasta {año_fin}")
@@ -66,55 +74,124 @@ fig.update_yaxes(title_text="Temperatura Máxima (°C)", secondary_y=False)
 fig.update_yaxes(title_text="Total de Defunciones", secondary_y=True)
 st.plotly_chart(fig)
 #%%
+
+
+st.markdown('''
+            ### **2 - Evaluacion de alerta temperaturas sobre 35º**
+            - Se establece un indicador si la temperatura supera los 35 grados en un dia especifico
+''')
+
+
 # Gráfico de días con temperaturas sobre y bajo 35°C
-color_map_sobre_35 = {
+color_map_sobre_35_alerta = {
     'Sobre 35': 'red',  # Rojo para días con temperaturas sobre 35°C
     'Bajo 35': 'blue',  # Azul para días con temperaturas bajo 35°C
 }
 
-fig_sobre_35 = make_subplots(specs=[[{"secondary_y": True}]])
+fig_sobre_35_alerta = make_subplots(specs=[[{"secondary_y": True}]])
 
-fig_sobre_35.add_trace(
-    go.Scatter(x=df_seleccionado_periodo['date'], y=df_seleccionado_periodo['t_max'], name='Temperatura Máxima', mode='lines'),
+fig_sobre_35_alerta.add_trace(
+    go.Scatter(x=df_selec_est_def_period['date'], y=df_selec_est_def_period['t_max'], name='Temperatura Máxima', mode='lines'),
     secondary_y=False,
 )
 
-for alerta, color in color_map_sobre_35.items():
-    df_alerta = df_seleccionado_periodo[df_seleccionado_periodo['sobre_35'] == alerta]
-    fig_sobre_35.add_trace(
+for alerta, color in color_map_sobre_35_alerta.items():
+    df_alerta = df_selec_est_def_period[df_selec_est_def_period['sobre_35_alerta'] == alerta]
+    fig_sobre_35_alerta.add_trace(
         go.Scatter(x=df_alerta['date'], y=df_alerta['t_max'], mode='markers', name=alerta, marker=dict(color=color)),
         secondary_y=False,
     )
 
-fig_sobre_35.add_trace(
-    go.Scatter(x=df_seleccionado_periodo['date'], y=df_seleccionado_periodo['total_defunciones'], name='Total de Defunciones', mode='lines', marker=dict(color='purple')),
+fig_sobre_35_alerta.add_trace(
+    go.Scatter(x=df_selec_est_def_period['date'], y=df_selec_est_def_period['total_defunciones'], name='Total de Defunciones', mode='lines', marker=dict(color='purple')),
     secondary_y=True,
 )
-fig_sobre_35.update_layout(title_text=f"Días con Temperaturas Sobre y Bajo 35°C y total de defunciones para {nombre_estacion_seleccionada} desde {año_inicio} hasta {año_fin}")
-fig_sobre_35.update_xaxes(title_text="Fecha")
-fig_sobre_35.update_yaxes(title_text="Temperatura Máxima (°C)", secondary_y=False)
-fig_sobre_35.update_yaxes(title_text="Total de Defunciones", secondary_y=True)
-st.plotly_chart(fig_sobre_35)
+fig_sobre_35_alerta.update_layout(title_text=f"Días con Temperaturas Sobre y Bajo 35°C y total de defunciones para {nombre_estacion_seleccionada} desde {año_inicio} hasta {año_fin}")
+fig_sobre_35_alerta.update_xaxes(title_text="Fecha")
+fig_sobre_35_alerta.update_yaxes(title_text="Temperatura Máxima (°C)", secondary_y=False)
+fig_sobre_35_alerta.update_yaxes(title_text="Total de Defunciones", secondary_y=True)
+st.plotly_chart(fig_sobre_35_alerta)
 #%%
+
+
+
+st.markdown('''
+            ### **1 - Evaluacion de alerta SENAPRED, ORD 4877 emitido el dia 01-12-2023**
+
+            - Fuente: https://previsionsocial.gob.cl/wp-content/uploads/2023/12/ORD-4877-01-12-2023.pdf
+            - Siguiendo la ORD 4877 emitida el 1 de diciembre de 2023, se establecen los siguientes criterios para la activación de alertas:
+                - **Alerta Temprana Preventiva (ATP)**: 
+                        -   Se declara al momento de la activación del Anexo por Amenaza Calor Extremo.
+                        -   Vigente durante todo el periodo de acrivacion desde el mes de noviembre al mes de marzo de cada año, para todo el territorio nacional.
+                - **Alerta Amarilla (AA)**:
+                    - Pronóstico meteorológico de la Dirección Meteorológica de Chile (DMC) con temperaturas máximas diarias de 34°C o más por al menos 2 días.
+                - **Alerta Roja (AR)**:
+                    - Pronóstico meteorológico de la DMC con temperaturas máximas diarias de 40°C o más por un día o más.
+                    - Pronóstico meteorológico de la DMC con temperaturas máximas diarias de 34°C o más por al menos 3 días.
+''')
 # Gráfico de tipo de alerta meteorológica
 color_map_alertas = {
     'Sin Alerta': 'blue',  # Azul para días sin alerta
-    'Alerta temprana preventiva': 'green',  # Verde para Alerta Temprana Preventiva
+    'Alerta Temprana Preventiva': 'green',  # Verde para Alerta Temprana Preventiva
     'Alerta Amarilla': 'yellow',  # Amarillo para Alerta Amarilla
     'Alerta Roja': 'red'  # Rojo para Alerta Roja
 }
 
 fig_alertas = make_subplots(specs=[[{"secondary_y": True}]])
 fig_alertas.add_trace(
-    go.Scatter(x=df_seleccionado_periodo['date'], y=df_seleccionado_periodo['t_max'], name='Temperatura Máxima', mode='lines'),
+    go.Scatter(x=df_selec_est_def_period['date'], y=df_selec_est_def_period['t_max'], name='Temperatura Máxima', mode='lines'),
     secondary_y=False,
 )
 fig_alertas.add_trace(
-    go.Scatter(x=df_seleccionado_periodo['date'], y=df_seleccionado_periodo['total_defunciones'], name='Total de Defunciones', mode='lines', marker=dict(color='purple')),
+    go.Scatter(x=df_selec_est_def_period['date'], y=df_selec_est_def_period['total_defunciones'], name='Total de Defunciones', mode='lines', marker=dict(color='purple')),
     secondary_y=True,
 )
 for alerta, color in color_map_alertas.items():
-    df_alerta = df_seleccionado_periodo[df_seleccionado_periodo['alerta'] == alerta]
+    df_alerta = df_selec_est_def_period[df_selec_est_def_period['senapred_alerta'] == alerta]
+    fig_alertas.add_trace(
+        go.Scatter(x=df_alerta['date'], y=df_alerta['t_max'], mode='markers', name=alerta, marker=dict(color=color)),
+        secondary_y=False,
+    )
+
+fig_alertas.update_layout(title_text=f"Alertas Meteorológicas para {nombre_estacion_seleccionada}")
+fig_alertas.update_xaxes(title_text="Fecha")
+fig_alertas.update_yaxes(title_text="Temperatura Máxima (°C)", secondary_y=False)
+st.plotly_chart(fig_alertas)
+
+#%%
+
+
+st.markdown('''
+            ### **3 - Protocolo de Activación Institucional por Calor Extremo SEREMI Salud RM  Versión 01 (16-01-2024)**
+            - Se establecen los siguientes criterios para la activación de alertas:
+            - Verde Temprana Preventiva: 
+                - Temperatura de 30ºC o más
+            - Alerta Amarilla: 
+                - Temperaturas maximas diarias de 34ºC o más, por al menos 2 días.
+            - Alerta Roja: 
+                - Temperaturas máximas diarias de 40ºC o más, por un dia o más. 
+                - Temepraturas máximas diarias sde 34ºC o más, por al menos 3 dias.
+''')
+
+# Gráfico de tipo de alerta meteorológica
+color_map_alertas = {
+    'Sin Alerta': 'blue',  # Azul para días sin alerta
+    'Verde Temprana Preventiva': 'green',  # Verde para Alerta Temprana Preventiva
+    'Alerta Amarilla': 'yellow',  # Amarillo para Alerta Amarilla
+    'Alerta Roja': 'red'  # Rojo para Alerta Roja
+}
+
+fig_alertas = make_subplots(specs=[[{"secondary_y": True}]])
+fig_alertas.add_trace(
+    go.Scatter(x=df_selec_est_def_period['date'], y=df_selec_est_def_period['t_max'], name='Temperatura Máxima', mode='lines'),
+    secondary_y=False,
+)
+fig_alertas.add_trace(
+    go.Scatter(x=df_selec_est_def_period['date'], y=df_selec_est_def_period['total_defunciones'], name='Total de Defunciones', mode='lines', marker=dict(color='purple')),
+    secondary_y=True,
+)
+for alerta, color in color_map_alertas.items():
+    df_alerta = df_selec_est_def_period[df_selec_est_def_period['seremi_alerta'] == alerta]
     fig_alertas.add_trace(
         go.Scatter(x=df_alerta['date'], y=df_alerta['t_max'], mode='markers', name=alerta, marker=dict(color=color)),
         secondary_y=False,
@@ -127,23 +204,23 @@ st.plotly_chart(fig_alertas)
 #%%
 st.write('## Gráfico de boxplots de temperaturas máximas y total de defunciones por mes de un año en especifico')
 # Gráfico de boxplots de temperaturas máximas y total de defunciones por mes de un año en especifico
-df_seleccionado['mes'] = df_seleccionado['date'].dt.month_name()
-años_disponibles = sorted(df_seleccionado['date'].dt.year.unique())
+df_selec_est_def['mes'] = df_selec_est_def['date'].dt.month_name()
+años_disponibles = sorted(df_selec_est_def['date'].dt.year.unique())
 indice_2024 = años_disponibles.index(2024) if 2024 in años_disponibles else 0
-año_seleccionado = st.selectbox('Selecciona un año:', años_disponibles, index=indice_2024)
-df_filtrado_por_año = df_seleccionado[df_seleccionado['date'].dt.year == año_seleccionado]
-df_filtrado_por_año['mes'] = df_seleccionado['date'].dt.month_name()
+año_selec = st.selectbox('Selecciona un año:', años_disponibles, index=indice_2024)
+df_filter_año = df_selec_est_def[df_selec_est_def['date'].dt.year == año_selec]
+df_filter_año['mes'] = df_selec_est_def['date'].dt.month_name()
 
 fig = make_subplots(rows=1, cols=2, subplot_titles=('Temperaturas Máximas por Mes', 'Total de Defunciones por Mes'))
 fig.add_trace(
-    go.Box(x=df_filtrado_por_año['mes'], y=df_filtrado_por_año['t_max'], name='Temperaturas Máximas'),
+    go.Box(x=df_filter_año['mes'], y=df_filter_año['t_max'], name='Temperaturas Máximas'),
     row=1, col=1
 )
 fig.add_trace(
-    go.Box(x=df_filtrado_por_año['mes'], y=df_filtrado_por_año['total_defunciones'], name='Total de Defunciones', marker=dict(color='red')),
+    go.Box(x=df_filter_año['mes'], y=df_filter_año['total_defunciones'], name='Total de Defunciones', marker=dict(color='red')),
     row=1, col=2
 )
-fig.update_layout(height=600, width=800, title_text=f"Boxplots de Temperaturas Máximas y Total de Defunciones por Mes del año {año_seleccionado}")
+fig.update_layout(height=600, width=800, title_text=f"Boxplots de Temperaturas Máximas y Total de Defunciones por Mes del año {año_selec}")
 fig.update_xaxes(title_text="Mes", row=1, col=1)
 fig.update_yaxes(title_text="Temperatura Máxima (°C)", row=1, col=1)
 fig.update_xaxes(title_text="Mes", row=1, col=2)
