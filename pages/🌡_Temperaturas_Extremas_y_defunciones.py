@@ -69,7 +69,8 @@ def agregar_defunciones_a_grafico(fig, df):
             name='Defunciones Totales',
             yaxis='y2',
             marker=dict(
-                color='purple'
+                color='purple',
+                opacity=0.8  
             )
         )
     )
@@ -91,7 +92,7 @@ df['est'] = df['est'].astype(str)
 df_est['CODIGO'] = df_est['CODIGO'].astype(str)
 
 
-df = pd.merge(df, df_def, left_on='date', right_on='fecha', how='left')
+df_merge = pd.merge(df, df_def, left_on='date', right_on='fecha', how='left')
 
 
 #%%
@@ -112,7 +113,7 @@ codigo_estacion_seleccionada = df_est[df_est['NOMBRE'] == nombre_estacion_selecc
 
 
 # Filtrar los datos para la estación seleccionada
-df_seleccionado = df[df.est == codigo_estacion_seleccionada]
+df_seleccionado = df_merge[df_merge.est == codigo_estacion_seleccionada]
 df_est = df_est[df_est.CODIGO==codigo_estacion_seleccionada]
 st.title("Mapa de Estaciones")
 st.map(df_est, latitude="lat", longitude="long", color="#0000ff", size=100 ,zoom=10)
@@ -211,7 +212,7 @@ def listar_eventos_alerta35_con_temp(df):
 
     return eventos_alerta
 fig_con_alertas35_con_marcadores = visualizar_sobre35_con_marcadores(df_seleccionado_2023)
-agregar_defunciones_a_grafico(fig_con_alertas35_con_marcadores,df_seleccionado_2023)
+fig_con_alertas35_con_marcadores = agregar_defunciones_a_grafico(fig_con_alertas35_con_marcadores,df_seleccionado_2023)
 eventos_alerta_df_con_temp35 = listar_eventos_alerta35_con_temp(df_seleccionado_2023)
 st.write(f"## Eventos sobre 35 grados en la estación {nombre_estacion_seleccionada}")
 st.plotly_chart(fig_con_alertas35_con_marcadores, use_container_width=True)
