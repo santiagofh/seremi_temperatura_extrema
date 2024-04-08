@@ -79,7 +79,7 @@ st.plotly_chart(fig)
 
 
 st.markdown('''
-            ### **2 - Evaluacion de alerta temperaturas sobre 35º**
+            ### **Evaluacion de alerta temperaturas sobre 35º**
             - Se establece un indicador si la temperatura supera los 35 grados en un dia especifico
 ''')
 
@@ -118,7 +118,7 @@ st.plotly_chart(fig_sobre_35_alerta)
 
 
 st.markdown('''
-            ### **1 - Evaluacion de alerta SENAPRED, ORD 4877 emitido el dia 01-12-2023**
+            ### **Evaluacion de alerta SENAPRED, ORD 4877 emitido el dia 01-12-2023**
 
             - Fuente: https://previsionsocial.gob.cl/wp-content/uploads/2023/12/ORD-4877-01-12-2023.pdf
             - Siguiendo la ORD 4877 emitida el 1 de diciembre de 2023, se establecen los siguientes criterios para la activación de alertas:
@@ -164,7 +164,7 @@ st.plotly_chart(fig_alertas)
 
 
 st.markdown('''
-            ### **3 - Protocolo de Activación Institucional por Calor Extremo SEREMI Salud RM  Versión 01 (16-01-2024)**
+            ### **Protocolo de Activación Institucional por Calor Extremo SEREMI Salud RM  Versión 01 (16-01-2024)**
             - Se establecen los siguientes criterios para la activación de alertas:
             - Verde Temprana Preventiva: 
                 - Temperatura de 30ºC o más

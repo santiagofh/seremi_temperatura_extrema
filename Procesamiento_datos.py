@@ -4,6 +4,8 @@ import pandas as pd
 # Cargar los datos (Asumiendo que ya has cargado y preparado 'df' y 'df_est' como antes)
 df = pd.read_csv("data/tmm_historico_2013_2024.csv")
 df_est = pd.read_excel("data/est_meteo.xlsx")
+df_def_15 = pd.read_excel("data/Defunciones 2015 2016.xlsx", sheet_name="DEF TOTALES 2015", skiprows=3)
+df_def_16 = pd.read_excel("data/Defunciones 2015 2016.xlsx", sheet_name="DEF TOTALES 2016", skiprows=3)
 df_def_17 = pd.read_excel("data/Defunciones totales 2017 a 2024.xlsx", sheet_name="2017", skiprows=3, usecols="B:I")
 df_def_18 = pd.read_excel("data/Defunciones totales 2017 a 2024.xlsx", sheet_name="2018", skiprows=3, usecols="B:I")
 df_def_19 = pd.read_excel("data/Defunciones totales 2017 a 2024.xlsx", sheet_name="2019", skiprows=3, usecols="B:I")
@@ -13,18 +15,20 @@ df_def_22 = pd.read_excel("data/Defunciones totales 2017 a 2024.xlsx", sheet_nam
 df_def_23 = pd.read_excel("data/Defunciones totales 2017 a 2024.xlsx", sheet_name="2023-2024", skiprows=3, usecols="B:I")
 # Lista de DataFrames
 ls_df_def = [
-    df_def_17,
-    df_def_18,
-    df_def_19,
-    df_def_20,
-    df_def_21,
-    df_def_22,
-    df_def_23.rename(columns={'Unnamed: 1': 'FECHADEF'})  # Asumiendo que solo el último necesita renombrar esta columna
-]
+    df_def_15.rename(columns={'Unnamed: 0': 'FECHADEF', '1 a 4 años':'1 a 4'}),
+    df_def_16.rename(columns={'Unnamed: 0': 'FECHADEF', '1 a 4 años':'1 a 4'}),
+    df_def_17.rename(columns={'1 a 4 años':'1 a 4'}),
+    df_def_18.rename(columns={'1 a 4 años':'1 a 4'}),
+    df_def_19.rename(columns={'1 a 4 años':'1 a 4'}),
+    df_def_20.rename(columns={'1 a 4 años':'1 a 4'}),
+    df_def_21.rename(columns={'1 a 4 años':'1 a 4'}),
+    df_def_22.rename(columns={'1 a 4 años':'1 a 4'}),
+    df_def_23.rename(columns={'Unnamed: 1': 'FECHADEF','1 a 4 años':'1 a 4'})
+    ]
 df_def = pd.concat(ls_df_def)
 df_def.rename(columns={'FECHADEF': 'fecha'}, inplace=True)
 df_def['fecha'] = pd.to_datetime(df_def['fecha'], errors='coerce')
-df_def['total_defunciones'] = df_def.iloc[:, 1:].sum(axis=1)
+df_def['total_defunciones'] = df_def.iloc[:, 1:7].sum(axis=1)
 df_def.dropna(subset=['fecha'])
 df_def = df_def.reset_index(drop=True)
 #%%
